@@ -1,5 +1,5 @@
-# Hugable Lovable Recipes
-Makes your Lovable code hugable for users.
+# Lovable to Hugable
+Makes your Lovable code into hugable for users.
 
 This doc/system can be used by **non-technical users, rapid prototypers, and senior developers**.
 
