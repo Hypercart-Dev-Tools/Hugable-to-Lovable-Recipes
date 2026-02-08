@@ -3,6 +3,15 @@ Makes your Lovable code hugable for users.
 
 This doc/system can be used by **non-technical users, rapid prototypers, and senior developers**.
 
+## Who Should Use This System?
+
+This system is for you if you want to build a Lovable app that is:
+- ✅ **Easy to maintain** - Clear patterns prevent technical debt
+- ✅ **Easy to extend** - New features plug into existing contracts
+- ✅ **Easy for future developers to understand** - Self-documenting architecture with compliance checkpoints
+
+**Multi-tenant ready:** This system supports opening your app to friends, family, and other users when you're ready. You don't have to decide now; the multi-user data protection patterns are built in from day one, so you can scale from personal use to multi-user SaaS without a rewrite.
+
 ## How to Use This System
 
 ### With Lovable AI:
@@ -50,11 +59,23 @@ The AGENTS.md document provides:
 - CMS content management guidelines
 - Continuous audit and improvement processes
 
-## Tech Stack Assumptions
+## Technical Assumptions
 
+### **Multi-Tenant Architecture**
+- **Tenancy Model**: Multi-tenant SaaS with user-level isolation (each user owns their data)
+- **Security**: Row-level security (RLS) enforced on all tenant data tables
+- **Isolation Strategy**: `auth.uid()` filtering via Supabase RLS policies
+- **Shared vs. Tenant Data**:
+  - Shared: `app_config` (global CMS content)
+  - Tenant-scoped: `monitors`, `events`, `profiles`, user-specific settings
+- **Future-Ready**: Architecture supports migration to org-level tenancy if needed
+
+See [AGENTS.md Section 10.5](./AGENTS.md#105-multi-tenant-isolation-checklist) for complete multi-tenant isolation requirements.
+
+### **Tech Stack**
 - **Frontend**: React + TypeScript + Vite
-- **Backend**: Supabase (database + auth + edge functions)
-- **State Management**: Zustand
+- **Backend**: Supabase (database + auth + RLS + edge functions)
+- **State Management**: Zustand (with tenant context in `useAuthStore()`)
 - **UI Components**: Component-based with unified layout system
 
 ## Why This System Works

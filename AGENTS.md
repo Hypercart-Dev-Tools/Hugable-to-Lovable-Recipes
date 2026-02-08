@@ -32,26 +32,29 @@
 
 | # | Section | Verify | Build | QA | Human |
 |---|---------|--------|:-----:|:--:|:-----:|
-| 1 | Pre-Build | Domains, folders, typed contracts defined | [ ] | [ ] | [ ] |
+| 1 | Pre-Build | Domains, folders, tenant model, typed contracts defined | [ ] | [ ] | [ ] |
 | 2 | Build Contract | `UnifiedLayout` on all pages, no deprecated patterns | [ ] | [ ] | [ ] |
 | 3 | CMS Content | All CMS via `useCmsConfig` + service layer, no direct Supabase | [ ] | [ ] | [ ] |
-| 4 | State Mgmt | Auth via `useAuthStore`, no duplicate writable state | [ ] | [ ] | [ ] |
+| 4 | State Mgmt | Auth via `useAuthStore`, tenant context available, no duplicate state | [ ] | [ ] | [ ] |
 | 5 | Design Rules | DRY + SOLID + state hygiene applied | [ ] | [ ] | [ ] |
 | 6 | FSM | Correct pattern per complexity tier, no impossible states | [ ] | [ ] | [ ] |
 | 7 | Observability | Async boundaries emit telemetry, errors normalize to `AppError` | [ ] | [ ] | [ ] |
-| 8 | Post Build | `typecheck`/`lint`/`test` green, journeys pass, RLS verified | [ ] | [ ] | [ ] |
+| 8 | Post Build | `typecheck`/`lint`/`test` green, journeys pass, RLS + tenant isolation verified | [ ] | [ ] | [ ] |
 | 9 | Continuous Audit | Runtime signals reviewed, fixes shipped, changelog updated | [ ] | [ ] | [ ] |
 | 10 | RLS | `app_config` public read, admin-only write, policies current | [ ] | [ ] | [ ] |
+| 10.5 | Multi-Tenant | Tenant isolation enforced, cross-tenant access blocked, 100% RLS coverage | [ ] | [ ] | [ ] |
 | 11 | Theme | Extension points untouched, no premature branding | [ ] | [ ] | [ ] |
 | 12 | Key Paths | File structure matches contracted paths | [ ] | [ ] | [ ] |
 
 **Column key:** Build = 1st build pass | QA = post-build code review | Human = manual testing
 
 ## 1) Pre-Build Checklist (Before First Feature)
-- Define domain boundaries: auth, monitoring/events, admin CMS, shared UI.
+- Define domain boundaries: auth, monitoring/events, admin CMS, shared UI, **tenant isolation**.
+- Define tenant model: single-tenant vs. multi-tenant, user-level vs. org-level isolation, shared vs. tenant-scoped tables.
 - Define source of truth: Supabase for persisted data, Zustand for shared client state, component state for local ephemeral UI.
 - Freeze folder contracts: `src/pages`, `src/components`, `src/stores`, `src/integrations/supabase`.
 - Design `app_config` keys and RLS before building CMS-driven pages.
+- Design RLS policies for tenant data tables before building user-facing features.
 - Define typed contracts first (query result types, union states, service interfaces).
 
 ## 2) Build Contract Checklist (Current Repo Rules)
@@ -79,6 +82,9 @@
 - Auth source of truth is `useAuthStore()` in `src/stores/auth-store.ts`.
 - Admin checks use `isAdmin()`.
 - Logout uses `signOut()`.
+- Tenant context available via `useAuthStore()` (e.g., `currentUserId`, `currentOrgId` if org-level tenancy).
+- All Supabase queries automatically filter by tenant context (via RLS policies).
+- No hardcoded user/org IDs in components or services.
 - Events feed uses `src/stores/events-store.ts` with `MAX_EVENTS = 500`.
 - No duplicated writable entity state across component state + store + Supabase.
 
@@ -135,6 +141,11 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: AppError };
 - Critical journeys pass in local + preview (auth, dashboard, monitor lifecycle, admin CMS edit/publish).
 - Verification commands pass: `bun run typecheck`, `bun run lint`, `bun run test`, `supabase db diff`.
 - Security checks pass: RLS on writable tables, admin-only writes verified.
+- Multi-tenant isolation verified (cross-ref Section 10.5):
+  - User A cannot read/write User B's data (monitors, events, profiles, etc.)
+  - Unauthenticated users cannot access any tenant data
+  - Cross-tenant queries are blocked by RLS policies
+  - Admin access scoped correctly (global config vs. tenant data)
 - Resilience checks pass: loading/error/empty states exist for each remote surface.
 - `Observability + Error Contract Checklist` (Section 7) is fully passed.
 - `CHANGELOG.md` is updated with version bump and architecture deltas.
@@ -152,6 +163,35 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: AppError };
 - `app_config` public read is enabled.
 - `app_config` writes are restricted to authenticated admins (`is_admin(auth.uid())`).
 - RLS policies are verified before adding new `app_config` keys.
+
+## 10.5) Multi-Tenant Isolation Checklist
+
+### Tenant Model Definition:
+- Tenant scope defined: user-level (each user owns their data), org-level (users share org data), or hybrid.
+- Tenant context stored in: `auth.uid()` for user-level, `auth.jwt() ->> 'org_id'` for org-level, or separate tenant table.
+- Shared vs. tenant-scoped tables documented (e.g., `app_config` is shared, `monitors`/`events` are tenant-scoped).
+
+### RLS Policies (Tenant Data):
+- All tenant data tables have RLS enabled (monitors, events, profiles, user-specific settings, etc.).
+- Policies use `auth.uid()` or `auth.jwt() ->> 'org_id'` for isolation.
+- SELECT policies prevent cross-tenant reads: `WHERE user_id = auth.uid()` or equivalent.
+- INSERT/UPDATE/DELETE policies prevent cross-tenant writes.
+- No table allows cross-tenant SELECT/INSERT/UPDATE/DELETE without explicit admin override.
+- Admin override policies (if needed) are explicitly documented and audited.
+
+### Application Layer:
+- Tenant context available in `useAuthStore()` (e.g., `currentUserId`, `currentOrgId`).
+- All Supabase queries automatically filter by tenant (via RLS, not manual WHERE clauses).
+- No hardcoded user/org IDs in components, services, or hooks.
+- Service layer functions accept tenant context from auth store, never from props/params.
+
+### Testing & Verification:
+- Cross-tenant read test: Create User A and User B, verify User A cannot SELECT User B's monitors/events.
+- Cross-tenant write test: Verify User A cannot INSERT/UPDATE/DELETE User B's data.
+- Unauthenticated access test: Verify no tenant data is accessible without valid auth token.
+- Admin scope test: Verify admins can access only intended scopes (global `app_config` vs. tenant data).
+- RLS policy coverage: 100% of tables with user/tenant data have RLS enabled.
+- Policy audit: Review all RLS policies quarterly for correctness and completeness.
 
 ## 11) Theme/Branding (Future-Ready) Checklist
 - Check `// Future:` comments before adding branding/layout logic.
