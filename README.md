@@ -35,8 +35,17 @@ and report any violations.
 ```
 See: [Section 0.1 (Compliance Matrix)](./AGENTS.md#01-compliance-matrix-living-dashboard)
 
-**Step 4: Each Build Cycle**.  
+**Step 4: Each Build Cycle**.
 Reset checkboxes in Section 0.1 and update "Last Audited" date in AGENTS.md header.
+
+**Step 5: When Bugs Pile Up**
+If behavior feels inconsistent or bugs keep recurring, re-audit before adding more features:
+```
+Please audit the current codebase against AGENTS.md Section 0.1
+(Compliance Matrix). Flag violations and fix them in priority order
+(security > data integrity > UX).
+```
+This often catches the root cause — a broken contract upstream — faster than chasing individual bugs.
 
 ### With Other AI Assistants (Cursor, GitHub Copilot, Augment, etc.):
 1. **Setup:** Add AGENTS.md to your project root
