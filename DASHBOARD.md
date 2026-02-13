@@ -36,6 +36,9 @@ This is the **living status tracker** for each build cycle. Agents and humans ch
 
 **Column key:** Build = 1st build pass | QA = post-build code review | Human = manual testing
 
+### Overall Health Grade:### [Fill-in after most recent audit]
+If B- or below, pursue immediate fixes for tracked items.
+
 ---
 
 ## Current Architecture Snapshot

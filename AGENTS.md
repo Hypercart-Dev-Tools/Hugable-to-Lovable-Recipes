@@ -76,6 +76,17 @@ The architecture snapshot captures the current state of layout, CMS, state manag
 
 → **[DASHBOARD.md — Architecture Snapshot](./DASHBOARD.md#current-architecture-snapshot)**
 
+## 0.6) Overall Health Grade
+
+The Overall Health Grade is a high-level indicator of the project's architectural health and compliance, derived from the completed compliance matrix in [DASHBOARD.md](./DASHBOARD.md). It provides an at-a-glance summary of the build cycle's quality.
+
+- **Grade A:** Fully compliant; all checklist items passed.
+- **Grade B:** Minor, non-critical deviations; requires review.
+- **Grade C:** One or more significant deviations; requires immediate fixes.
+- **Grade D/F:** Multiple critical violations; build is at risk.
+
+The grade is assessed at the end of each audit cycle and serves as a guide for prioritization. A grade of B- or below signals that technical debt remediation should be prioritized over new features.
+
 ## 1) Pre-Build Checklist (Before First Feature)
 - Define domain boundaries: auth, monitoring/events, admin CMS, shared UI, **tenant isolation**.
 - Define tenant model: single-tenant vs. multi-tenant, user-level vs. org-level isolation, shared vs. tenant-scoped tables.

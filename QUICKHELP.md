@@ -20,6 +20,10 @@ CMS content is managed through a dedicated service layer and hook pattern, not d
 The compliance dashboard tracks pass/fail status for each architecture section per build cycle.  
 → [DASHBOARD.md — Compliance Matrix](./DASHBOARD.md#compliance-matrix)
 
+### Assess overall project health
+The health grade provides a high-level summary of architectural compliance and build quality.
+→ [DASHBOARD.md — Overall Health Grade](./DASHBOARD.md#overall-health-grade)
+
 ### Fix a broken build
 Follow the recovery protocol: isolate the change, fix the smallest root cause, re-verify.  
 → [AGENTS.md §0.4 — Build Break Recovery](./AGENTS.md#04-build-break-recovery-protocol)
