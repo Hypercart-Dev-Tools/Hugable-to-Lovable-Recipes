@@ -50,7 +50,7 @@ This system is organized into layered documents. Start at the top and go deeper 
 ### Off-Road Guides (Advanced Patterns)
 | Document | Purpose |
 |----------|---------|
-| 🧪 **[OFF-ROAD/SUPABASE-TEMP-DEV.md](./OFF-ROAD/SUPABASE-TEMP-DEV.md)** | Dev testing guide — reusable sandbox table for prototyping |
+| 🧪 **[OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md)** | Dev testing guide — reusable sandbox table for prototyping |
 | 🌐 **[OFF-ROAD/STATIC-HOME-PAGE.md](./OFF-ROAD/STATIC-HOME-PAGE.md)** | SEO guide — make your React SPA home page visible to search engines |
 
 ## Technical Assumptions
@@ -174,7 +174,7 @@ When prototyping Supabase features or testing RLS policies outside the Lovable A
 - ❌ Never reference in production code
 
 ### Troubleshooting
-If sandbox setup fails, check the **Lovable Back-and-Forth Scenarios** table in [OFF-ROAD/SUPABASE-TEMP-DEV.md](./OFF-ROAD/SUPABASE-TEMP-DEV.md#lovable-back-and-forth-scenarios):
+If sandbox setup fails, check the **Lovable Back-and-Forth Scenarios** table in [OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md#lovable-back-and-forth-scenarios):
 
 | Symptom | Quick Fix |
 |---------|-----------|
@@ -186,7 +186,7 @@ If sandbox setup fails, check the **Lovable Back-and-Forth Scenarios** table in 
 
 **When escalating to Lovable:** Include curl command, response JSON, project ref, migration filename, and timestamp in one message.
 
-See **[OFF-ROAD/SUPABASE-TEMP-DEV.md](./OFF-ROAD/SUPABASE-TEMP-DEV.md)** for complete API reference, curl examples, troubleshooting guide, and graduation workflow.
+See **[OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md)** for complete API reference, curl examples, troubleshooting guide, and graduation workflow.
 
 ---
 

@@ -56,7 +56,11 @@ The architecture snapshot captures the current state of key decisions and is upd
 ### Test Supabase features outside Lovable AI chat
 Use the reusable sandbox table for prototyping queries, RLS policies, and data structures without deploying edge functions.
 → [AGENTS.md §12.5 — Dev Testing Workflow](./AGENTS.md#125-working-outside-of-lovable-ai-chat-dev-testing-workflow)
-→ [SUPABASE-TEMP-DEV.md — Complete Guide](./SUPABASE-TEMP-DEV.md)
+→ [OFF-ROAD/SUPABASE-TEMP-DB.md — Complete Guide](./OFF-ROAD/SUPABASE-TEMP-DB.md)
+
+### Make my React SPA home page visible to search engines
+Lovable sites ship as SPAs — search engines see empty HTML. Use static HTML injection or prerendering for the home page.
+→ [OFF-ROAD/STATIC-HOME-PAGE.md — SEO Guide](./OFF-ROAD/STATIC-HOME-PAGE.md)
 
 ---
 
@@ -67,9 +71,14 @@ Use the reusable sandbox table for prototyping queries, RLS policies, and data s
 | **[QUICKHELP.md](./QUICKHELP.md)** (this file) | First-layer help, common tasks, FAQ | First stop for any question |
 | **[DASHBOARD.md](./DASHBOARD.md)** | Build cycle status and architecture snapshot | During and after each build cycle |
 | **[AGENTS.md](./AGENTS.md)** | Full architecture rules and checklists | When you need detailed implementation rules |
-| **[SUPABASE-TEMP-DEV.md](./SUPABASE-TEMP-DEV.md)** | Dev testing guide with sandbox table | When prototyping Supabase features |
 | **[CHANGELOG.md](./CHANGELOG.md)** | Version history, violations, lessons learned | After changes or when reviewing history |
 | **[REFERENCES.md](./REFERENCES.md)** | Source material for design principles | When you want to understand *why* a rule exists |
+
+### Off-Road Guides (Advanced Patterns)
+| Document | Purpose | When to check |
+|----------|---------|---------------|
+| **[OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md)** | Dev testing guide with sandbox table | When prototyping Supabase features |
+| **[OFF-ROAD/STATIC-HOME-PAGE.md](./OFF-ROAD/STATIC-HOME-PAGE.md)** | SEO guide for React SPAs | When you need search engines to index your home page |
 
 ---
 
@@ -106,15 +115,33 @@ In the changelog, using the standard entry format with `#lessonslearned` tag.
 
 ### "How do I test Supabase features without deploying edge functions?"
 Use the `temp_dev_records` table pattern. Ask your AI assistant to run the one-time setup wizard, then use the sandbox for prototyping queries, RLS policies, and data structures. Reset between test runs with `DELETE ?action=reset_feature&feature_key={key}`.
-→ [SUPABASE-TEMP-DEV.md](./SUPABASE-TEMP-DEV.md)
+→ [OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md)
 
 ### "The sandbox setup failed with 404/401/RLS errors"
-Check the **Lovable Back-and-Forth Scenarios** troubleshooting table in SUPABASE-TEMP-DEV.md. Common fixes:
+Check the **Lovable Back-and-Forth Scenarios** troubleshooting table in OFF-ROAD/SUPABASE-TEMP-DB.md. Common fixes:
 - **404**: Wait 1-2 minutes for edge function deployment propagation
 - **401**: Refresh your access token
 - **Table not found**: Apply migration and reload PostgREST schema cache
 - **RLS errors**: Verify `user_id` matches `auth.uid()`
 
 When escalating to Lovable, include: curl command, response JSON, project ref, migration filename, and timestamp.
-→ [SUPABASE-TEMP-DEV.md — Troubleshooting](./SUPABASE-TEMP-DEV.md#lovable-back-and-forth-scenarios)
+→ [OFF-ROAD/SUPABASE-TEMP-DB.md — Troubleshooting](./OFF-ROAD/SUPABASE-TEMP-DB.md#lovable-back-and-forth-scenarios)
+
+### "How do I make my React SPA home page visible to Google/search engines?"
+Lovable sites ship as SPAs — crawlers see empty HTML. Use the phased approach in OFF-ROAD/STATIC-HOME-PAGE.md:
+- **Spike:** Static HTML injection (15 min, zero infra)
+- **Phase 1:** Puppeteer prerendering (hours, CLI)
+- **Phase 2:** Cloudflare Worker proxy (half-day, free tier)
+- **Phase 3:** Dedicated static page (1-2 days, decoupled)
+
+Stop as soon as one phase works.
+→ [OFF-ROAD/STATIC-HOME-PAGE.md](./OFF-ROAD/STATIC-HOME-PAGE.md)
+
+### Common Pitfalls
+
+- **404 Errors**: Wait 1-2 minutes for edge function deployment propagation.
+- **401 Unauthorized**: Refresh your access token.
+- **Table Not Found**: Apply migration and reload PostgREST schema cache.
+- **RLS Errors**: Verify `user_id` matches `auth.uid()`.
+- **Edge Function Fails, SDK Works**: Check `supabase/config.toml` function settings.
 

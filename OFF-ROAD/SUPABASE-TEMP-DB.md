@@ -307,13 +307,125 @@ All actions write to `temp_dev_reset_log` with `deleted_count` and optional `rea
 
 ## Graduation: Spike → Production
 
-When a spike proves out and is ready for production:
+When a spike proves out and is ready for production, follow this checklist to migrate from temp sandbox to production schema:
 
-1. **Create a dedicated table** with a proper migration (typed columns, constraints, indexes).
-2. **Create a dedicated repository** in `src/repositories/`.
-3. **Create a dedicated hook** in `src/hooks/`.
-4. **Clean up** — run `DELETE ?action=reset_feature&feature_key={key}` to remove spike data.
-5. **Document** — log the graduation in `CHANGELOG.md`.
+### Step 1: Create Production Schema
+```sql
+-- Example: Graduating kanban_insert_order spike to production
+CREATE TABLE IF NOT EXISTS public.kanban_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  column_id TEXT NOT NULL,
+  card_id TEXT NOT NULL,
+  sort_index INTEGER NOT NULL DEFAULT 0,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add RLS policies
+ALTER TABLE public.kanban_cards ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own kanban cards"
+  ON public.kanban_cards FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Add indexes
+CREATE INDEX idx_kanban_cards_user_column ON public.kanban_cards(user_id, column_id);
+CREATE INDEX idx_kanban_cards_sort ON public.kanban_cards(user_id, column_id, sort_index);
+```
+
+### Step 2: Create Production Repository
+```typescript
+// src/repositories/KanbanRepository.ts
+import { supabase } from '@/integrations/supabase/client';
+
+export class KanbanRepository {
+  async getCardsByColumn(userId: string, columnId: string) {
+    return supabase
+      .from('kanban_cards')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('column_id', columnId)
+      .order('sort_index');
+  }
+
+  async moveCard(userId: string, cardId: string, newColumnId: string, newSortIndex: number) {
+    return supabase
+      .from('kanban_cards')
+      .update({ column_id: newColumnId, sort_index: newSortIndex })
+      .eq('user_id', userId)
+      .eq('card_id', cardId);
+  }
+}
+```
+
+### Step 3: Create Production Hook
+```typescript
+// src/hooks/useKanban.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { KanbanRepository } from '@/repositories/KanbanRepository';
+
+export function useKanban(userId: string, columnId: string) {
+  const repo = new KanbanRepository();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['kanban', userId, columnId],
+    queryFn: () => repo.getCardsByColumn(userId, columnId),
+  });
+
+  const moveCard = useMutation({
+    mutationFn: ({ cardId, newColumnId, newSortIndex }) =>
+      repo.moveCard(userId, cardId, newColumnId, newSortIndex),
+  });
+
+  return { cards: data, isLoading, moveCard };
+}
+```
+
+### Step 4: Clean Up Temp Data
+```bash
+# Via edge function
+curl -X DELETE "$SUPABASE_URL/functions/v1/temp-dev-sandbox?action=reset_feature&feature_key=kanban_insert_order" \
+  -H "Authorization: Bearer $USER_JWT" \
+  -H "apikey: $ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"Graduated to production kanban_cards table"}'
+
+# Or via direct SDK
+await supabase
+  .from('temp_dev_records')
+  .delete()
+  .eq('feature_key', 'kanban_insert_order');
+```
+
+### Step 5: Document the Graduation
+```markdown
+# In CHANGELOG.md
+- 2026-02-14: Graduated `kanban_insert_order` spike to production `kanban_cards` table with dedicated repository and hook; cleaned up temp_dev_records data for feature_key='kanban_insert_order'.
+```
+
+### Step 6: Verify Cleanup
+```sql
+-- Confirm temp data is removed
+SELECT COUNT(*) FROM public.temp_dev_records WHERE feature_key = 'kanban_insert_order';
+-- Should return 0
+
+-- Check reset log for audit trail
+SELECT * FROM public.temp_dev_reset_log WHERE feature_key = 'kanban_insert_order' ORDER BY created_at DESC LIMIT 1;
+```
+
+### Graduation Checklist
+
+- [ ] Production migration created with proper types, constraints, and indexes
+- [ ] RLS policies applied to production table
+- [ ] Production repository created in `src/repositories/`
+- [ ] Production hook created in `src/hooks/`
+- [ ] Temp data cleaned up via `DELETE ?action=reset_feature&feature_key={key}`
+- [ ] Cleanup verified (temp table query returns 0 rows)
+- [ ] Graduation documented in `CHANGELOG.md`
+- [ ] Reset log entry exists for audit trail
 
 ---
 
