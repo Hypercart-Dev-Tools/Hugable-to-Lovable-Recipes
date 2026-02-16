@@ -1,6 +1,6 @@
 # AGENTS.md - Checklist-Driven Architecture Guide (Lovable TS/JS/React/Vite/Supabase)
-**Version:** 1.6
-**Last Updated:** 2026-02-14
+**Version:** 1.7
+**Last Updated:** 2026-02-16
 **Last Audited:** _not yet audited_
 **Purpose:** Canonical architecture rules and checklists. For quick help, start with [QUICKHELP.md](./QUICKHELP.md). For build cycle status, see [DASHBOARD.md](./DASHBOARD.md).
 
@@ -346,12 +346,63 @@ Do not log rule violations in this file. Log each violation and lesson in `CHANG
 **Entry template (in `CHANGELOG.md`):**
 `- YYYY-MM-DD: [Section X] reason -> outcome -> next action #lessonslearned`
 
-## 14) Revision History (This Document)
-- 2026-02-14 (v1.6): Added Section 12.5 "Working Outside of Lovable AI Chat" with reusable Supabase sandbox table pattern and reference to OFF-ROAD/SUPABASE-TEMP-DB.md guide; added OFF-ROAD/ folder to Key Paths for advanced patterns.
-- 2026-02-08 (v1.5): Embedded DASHBOARD.md and QUICKHELP.md templates as appendices with one-time extraction instructions (Section 0.0); single-file delivery model.
-- 2026-02-08 (v1.4): Extracted Compliance Matrix and Architecture Snapshot to [DASHBOARD.md](./DASHBOARD.md); added [QUICKHELP.md](./QUICKHELP.md) as first-layer help; updated navigation pointers throughout.
-- 2026-02-08 (v1.3): Added TL;DR non-negotiables, AI working guardrails, dependency/import contract, build-break protocol, architecture snapshot, tiered observability guidance, FSM concrete example, and revision history section.
-- 2026-02-08 (v1.2): Converted to checklist-driven architecture format; added violations policy routing to `CHANGELOG.md`.
+## 14) Revision History
+
+**All version history and change details are maintained in [CHANGELOG.md](./CHANGELOG.md).**
+
+This keeps AGENTS.md focused on current architecture rules and reduces context overhead. For historical context, see CHANGELOG.md.
+
+---
+
+## 15) Breaking Change Management Checklist
+
+**Definition:** A breaking change is any modification that causes existing consumers (UI components, services, hooks, RLS policies, edge functions, or external integrations) to fail without code changes on their side.
+
+### Severity Tiers
+
+| Tier | Scope | Examples | Handling |
+|------|-------|----------|----------|
+| **Critical** | Schema-level | Dropped/renamed columns, changed column types, removed tables | Requires migration script, rollback plan, and team sign-off before merge |
+| **High** | API/contract-level | Changed service interface signatures, modified hook return shapes, altered edge function request/response contracts | Requires deprecation period or versioned endpoint |
+| **Moderate** | UI contract-level | Renamed `app_config` keys, changed component prop contracts, altered store action signatures | Requires backward-compatible shim for one release cycle |
+
+### Identification Checklist
+- Evaluate all changes for breaking impacts before opening a PR, especially when:
+  - Modifying database tables, columns, types, or constraints.
+  - Changing service interfaces, hook return types, or store action signatures.
+  - Updating shared libraries, API contracts, or edge function request/response shapes.
+  - Fixing bugs in ways that alter established behavior consumers may depend on.
+  - Touching RLS policies that other queries or services rely on (cross-ref Sections 10/10.5).
+
+### Pre-Merge Gate
+- Run `bun run typecheck && bun run lint && bun run test` against the existing test suite before merging any schema/API change.
+- Verify RLS policies still function correctly after any schema change (cross-ref Sections 10/10.5).
+- Confirm no existing consumers break by searching for all call sites of the changed contract.
+
+### Migration & Rollback
+- Document a rollback plan: how to revert the change if it fails in production.
+- For schema changes: provide a forward migration and a reverse migration script.
+- For renamed keys (e.g., `app_config`): keep the old key readable for one release cycle and add a deprecation log entry before removing it.
+- For changed service interfaces: support both old and new signatures for one release cycle when feasible.
+
+### Communication & Logging
+- Add a `## Breaking Changes` subsection to the CHANGELOG.md release entry.
+- Include: affected tier, what changed, migration steps for consumers, and rollback instructions.
+- Communicate the impact and migration plan to the team before merging.
+- Avoid breaking changes unless there is a clear, documented business need.
+
+---
+
+## 16) Technical Spike & Proof of Concept (POC) Checklist
+- **Define Purpose:** Before starting a spike, define a clear, timeboxed objective. Spikes should be used to:
+  - Validate the feasibility of a new feature or architectural choice.
+  - Identify risks and unknowns early in the planning phase.
+  - Minimize surprises during full implementation.
+- **Follow Guidelines:**
+  - Define clear, measurable objectives for the spike.
+  - Timebox the effort to avoid scope creep and analysis paralysis.
+  - Use the `temp_dev_records` sandbox for safe, isolated testing (see Section 12.5).
+  - Document all findings and decisions in the `OFF-ROAD/` directory or relevant project documentation.
 
 ---
 
@@ -544,3 +595,4 @@ In the changelog, using the standard entry format with `#lessonslearned` tag.
 → [AGENTS.md §13](./AGENTS.md#13-violations---changelogmd-policy) | [CHANGELOG.md](./CHANGELOG.md)
 
 <!-- END QUICKHELP TEMPLATE -->
+
