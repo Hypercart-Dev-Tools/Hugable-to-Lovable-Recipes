@@ -346,12 +346,11 @@ Do not log rule violations in this file. Log each violation and lesson in `CHANG
 **Entry template (in `CHANGELOG.md`):**
 `- YYYY-MM-DD: [Section X] reason -> outcome -> next action #lessonslearned`
 
-## 14) Revision History (This Document)
-- 2026-02-14 (v1.6): Added Section 12.5 "Working Outside of Lovable AI Chat" with reusable Supabase sandbox table pattern and reference to OFF-ROAD/SUPABASE-TEMP-DB.md guide; added OFF-ROAD/ folder to Key Paths for advanced patterns.
-- 2026-02-08 (v1.5): Embedded DASHBOARD.md and QUICKHELP.md templates as appendices with one-time extraction instructions (Section 0.0); single-file delivery model.
-- 2026-02-08 (v1.4): Extracted Compliance Matrix and Architecture Snapshot to [DASHBOARD.md](./DASHBOARD.md); added [QUICKHELP.md](./QUICKHELP.md) as first-layer help; updated navigation pointers throughout.
-- 2026-02-08 (v1.3): Added TL;DR non-negotiables, AI working guardrails, dependency/import contract, build-break protocol, architecture snapshot, tiered observability guidance, FSM concrete example, and revision history section.
-- 2026-02-08 (v1.2): Converted to checklist-driven architecture format; added violations policy routing to `CHANGELOG.md`.
+## 14) Revision History
+
+**All version history and change details are maintained in [CHANGELOG.md](./CHANGELOG.md).**
+
+This keeps AGENTS.md focused on current architecture rules and reduces context overhead. For historical context, see CHANGELOG.md.
 
 ---
 
@@ -544,3 +543,38 @@ In the changelog, using the standard entry format with `#lessonslearned` tag.
 → [AGENTS.md §13](./AGENTS.md#13-violations---changelogmd-policy) | [CHANGELOG.md](./CHANGELOG.md)
 
 <!-- END QUICKHELP TEMPLATE -->
+
+## 15) Breaking Changes Awareness and Minimization
+
+### Proactive Identification of Breaking Changes
+- Always evaluate changes for potential breaking impacts, especially in the following scenarios:
+  - **New Feature Addition:** Adding new functionality that modifies existing APIs, database schemas, or contracts.
+  - **Bug Fixes:** Changes that alter expected behavior, even if unintended.
+  - **PR Reviews:** During code reviews, flag any changes that could disrupt existing functionality.
+- Examples of breaking changes:
+  - Modifications to existing database tables/schemas (e.g., renaming columns, changing data types).
+  - Changes to API contracts (e.g., removing fields, altering response structures).
+  - Updates to shared libraries or dependencies that affect downstream consumers.
+
+### Minimization Strategy
+- Avoid breaking changes unless absolutely necessary. If unavoidable:
+  - Clearly document the change and its impact.
+  - Communicate with stakeholders and ensure alignment.
+  - Provide migration paths or backward compatibility where possible.
+- Always log breaking changes in `CHANGELOG.md` with a clear description and mitigation steps.
+
+---
+
+## 16) Technical Spikes and Proof of Concept (POC)
+
+### Purpose
+- Conduct technical spikes or POC tests during the project planning phase to:
+  - Validate feasibility of new features or architectural decisions.
+  - Identify potential risks and unknowns early.
+  - Minimize surprises during implementation.
+
+### Guidelines
+- Define clear objectives for the spike (e.g., test a new library, validate a database schema).
+- Timebox the effort to avoid scope creep.
+- Document findings and decisions in `OFF-ROAD/` or relevant project documentation.
+- Use the `temp_dev_records` table pattern for safe, repeatable testing (see [OFF-ROAD/SUPABASE-TEMP-DB.md](./OFF-ROAD/SUPABASE-TEMP-DB.md)).
